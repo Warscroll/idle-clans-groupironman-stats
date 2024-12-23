@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highest Player Skills</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom Styles for Dark Mode */
+        body {
+            background-color: #121212;
+            color: #e0e0e0; /* Light gray for better readability */
+            padding-top: 50px;
+            padding-bottom: 50px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .skill-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            background-color: #1e1e1e;
+            border: none;
+            color: #e0e0e0; /* Ensure text inside cards is readable */
+        }
+        .skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(255,255,255,0.2);
+        }
+        .skill-icon {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        .no-data {
+            color: #ff5252; /* Bright red for visibility */
+            font-weight: bold;
+        }
+        .loading-spinner .spinner-border {
+            color: #0d6efd;
+        }
+        /* Custom Column for 5 per row on xl screens */
+        @media (min-width: 1200px) {
+            .col-xl-20 {
+                flex: 0 0 20%;
+                max-width: 20%;
+            }
+        }
+        /* Button Styling (Removed as per request) */
+        /* Alert Styling */
+        .alert {
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Skills Grid -->
+        <div id="skillsGrid" class="row g-4">
+            <!-- Skill Cards will be injected here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (with Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript Code -->
+    <script>
+        // CHANGE ME - Usernames for your clan
+        const players = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6'];
+
+        // List of skills to track
+        const skills = [
+            "Rigour", "Strength", "Defence", "Archery", "Magic", "Health", "Crafting", "Woodcutting", "Carpentry",
+            "Fishing", "Cooking", "Mining", "Smithing", "Foraging", "Farming", "Agility", "Plundering",
+            "Enchanting", "Brewing", "Exterminating"
+        ];
+
+        // Mapping of skills to their respective Imgur image URLs
+        const skillIconUrls = {
+            "Agility": "https://i.imgur.com/sUAYfhh.png",
+            "Archery": "https://i.imgur.com/y53fwFd.png",
+            "Brewing": "https://i.imgur.com/ljFOhB3.png",
+            "Carpentry": "https://i.imgur.com/uVT2z5i.png",
+            "Cooking": "https://i.imgur.com/Rb4aJIY.png",
+            "Crafting": "https://i.imgur.com/e4wVEBw.png",
+            "Defence": "https://i.imgur.com/IB4XVS0.png",
+            "Enchanting": "https://i.imgur.com/vW0MLE6.png",
+            "Exterminating": "https://i.imgur.com/TTSykzd.png",
+            "Farming": "https://i.imgur.com/jz6Oarl.png",
+            "Fishing": "https://i.imgur.com/jQphTVH.png",
+            "Foraging": "https://i.imgur.com/xjVoLJb.png",
+            "Health": "https://i.imgur.com/NiTR4YJ.png",
+            "Magic": "https://i.imgur.com/IJW3Qo7.png",
+            "Mining": "https://i.imgur.com/UYhF4V3.png",
+            "Plundering": "https://i.imgur.com/7EWSfgg.png",
+            "Rigour": "https://i.imgur.com/5SriT8V.png", 
+            "Smithing": "https://i.imgur.com/F3B8kqx.png",
+            "Strength": "https://i.imgur.com/HYJIFLD.png",
+            "Woodcutting": "https://i.imgur.com/3TA9di4.png"
+        };
+
+        // Fallback placeholder image URL
+        const placeholderImage = "https://via.placeholder.com/64?text=No+Image"; // Using a reliable placeholder
+
+        // Level to XP mapping
+        const levelXPData = [
+            { level: 1, total_xp: 0 },
+            { level: 2, total_xp: 75 },
+            { level: 3, total_xp: 151 },
+            { level: 4, total_xp: 227 },
+            { level: 5, total_xp: 303 },
+            { level: 6, total_xp: 380 },
+            { level: 7, total_xp: 531 },
+            { level: 8, total_xp: 683 },
+            { level: 9, total_xp: 836 },
+            { level: 10, total_xp: 988 },
+            { level: 11, total_xp: 1141 },
+            { level: 12, total_xp: 1294 },
+            { level: 13, total_xp: 1447 },
+            { level: 14, total_xp: 1751 },
+            { level: 15, total_xp: 2054 },
+            { level: 16, total_xp: 2358 },
+            { level: 17, total_xp: 2663 },
+            { level: 18, total_xp: 2967 },
+            { level: 19, total_xp: 3272 },
+            { level: 20, total_xp: 3577 },
+            { level: 21, total_xp: 4182 },
+            { level: 22, total_xp: 4788 },
+            { level: 23, total_xp: 5393 },
+            { level: 24, total_xp: 5999 },
+            { level: 25, total_xp: 6606 },
+            { level: 26, total_xp: 7212 },
+            { level: 27, total_xp: 7819 },
+            { level: 28, total_xp: 9026 },
+            { level: 29, total_xp: 10233 },
+            { level: 30, total_xp: 11441 },
+            { level: 31, total_xp: 12648 },
+            { level: 32, total_xp: 13856 },
+            { level: 33, total_xp: 15065 },
+            { level: 34, total_xp: 16273 },
+            { level: 35, total_xp: 18682 },
+            { level: 36, total_xp: 21091 },
+            { level: 37, total_xp: 23500 },
+            { level: 38, total_xp: 25910 },
+            { level: 39, total_xp: 28319 },
+            { level: 40, total_xp: 30729 },
+            { level: 41, total_xp: 33140 },
+            { level: 42, total_xp: 37950 },
+            { level: 43, total_xp: 42761 },
+            { level: 44, total_xp: 47572 },
+            { level: 45, total_xp: 52383 },
+            { level: 46, total_xp: 57195 },
+            { level: 47, total_xp: 62006 },
+            { level: 48, total_xp: 66818 },
+            { level: 49, total_xp: 76431 },
+            { level: 50, total_xp: 86043 },
+            { level: 51, total_xp: 95656 },
+            { level: 52, total_xp: 105269 },
+            { level: 53, total_xp: 114882 },
+            { level: 54, total_xp: 124496 },
+            { level: 55, total_xp: 134109 },
+            { level: 56, total_xp: 153323 },
+            { level: 57, total_xp: 172538 },
+            { level: 58, total_xp: 191752 },
+            { level: 59, total_xp: 210967 },
+            { level: 60, total_xp: 230182 },
+            { level: 61, total_xp: 249397 },
+            { level: 62, total_xp: 268613 },
+            { level: 63, total_xp: 307028 },
+            { level: 64, total_xp: 345444 },
+            { level: 65, total_xp: 383861 },
+            { level: 66, total_xp: 422277 },
+            { level: 67, total_xp: 460694 },
+            { level: 68, total_xp: 499111 },
+            { level: 69, total_xp: 537528 },
+            { level: 70, total_xp: 614346 },
+            { level: 71, total_xp: 691163 },
+            { level: 72, total_xp: 767981 },
+            { level: 73, total_xp: 844800 },
+            { level: 74, total_xp: 921618 },
+            { level: 75, total_xp: 998437 },
+            { level: 76, total_xp: 1075256 },
+            { level: 77, total_xp: 1228875 },
+            { level: 78, total_xp: 1382495 },
+            { level: 79, total_xp: 1536114 },
+            { level: 80, total_xp: 1689734 },
+            { level: 81, total_xp: 1843355 },
+            { level: 82, total_xp: 1996975 },
+            { level: 83, total_xp: 2150596 },
+            { level: 84, total_xp: 2457817 },
+            { level: 85, total_xp: 2765038 },
+            { level: 86, total_xp: 3072260 },
+            { level: 87, total_xp: 3379481 },
+            { level: 88, total_xp: 3686703 },
+            { level: 89, total_xp: 3993926 },
+            { level: 90, total_xp: 4301148 },
+            { level: 91, total_xp: 4915571 },
+            { level: 92, total_xp: 5529994 },
+            { level: 93, total_xp: 6144417 },
+            { level: 94, total_xp: 6758841 },
+            { level: 95, total_xp: 7373264 },
+            { level: 96, total_xp: 7987688 },
+            { level: 97, total_xp: 8602113 },
+            { level: 98, total_xp: 9830937 },
+            { level: 99, total_xp: 11059762 },
+            { level: 100, total_xp: 12288587 },
+            { level: 101, total_xp: 13517412 },
+            { level: 102, total_xp: 14746238 },
+            { level: 103, total_xp: 15975063 },
+            { level: 104, total_xp: 17203889 },
+            { level: 105, total_xp: 19661516 },
+            { level: 106, total_xp: 22119142 },
+            { level: 107, total_xp: 24576769 },
+            { level: 108, total_xp: 27034396 },
+            { level: 109, total_xp: 29492023 },
+            { level: 110, total_xp: 31949651 },
+            { level: 111, total_xp: 34407278 },
+            { level: 112, total_xp: 39322506 },
+            { level: 113, total_xp: 44237735 },
+            { level: 114, total_xp: 49152963 },
+            { level: 115, total_xp: 54068192 },
+            { level: 116, total_xp: 58983421 },
+            { level: 117, total_xp: 63898650 },
+            { level: 118, total_xp: 68813880 },
+            { level: 119, total_xp: 78644309 },
+            { level: 120, total_xp: 88474739 }
+        ];
+
+        /**
+         * Determines the player's level based on their XP.
+         * @param {number} xp - The player's total XP.
+         * @returns {number} - The corresponding level.
+         */
+        function getLevelFromXP(xp) {
+            let level = 1;
+            for (let i = levelXPData.length - 1; i >= 0; i--) {
+                if (xp >= levelXPData[i].total_xp) {
+                    level = levelXPData[i].level;
+                    break;
+                }
+            }
+            return level;
+        }
+
+        /**
+         * Fetches player data from the API.
+         * @param {string} player - The player's name.
+         * @returns {Promise<Object|null>} - The player data or null if failed.
+         */
+        async function fetchPlayerData(player) {
+            const url = `https://query.idleclans.com/api/Player/profile/simple/${encodeURIComponent(player)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.error(`Failed to fetch data for player ${player}. Status: ${response.status}`);
+                    return null;
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error(`Error fetching data for player ${player}:`, error);
+                return null;
+            }
+        }
+
+        /**
+         * Fetches data for all players and determines the highest skill levels.
+         * @returns {Promise<Object>} - An object mapping each skill to its highest player and level.
+         */
+        async function getHighestSkillData() {
+            const highestSkillData = {};
+
+            for (const player of players) {
+                const data = await fetchPlayerData(player);
+                if (!data || !data.skillExperiences) {
+                    continue;
+                }
+
+                let skillExperiences;
+                try {
+                    skillExperiences = JSON.parse(data.skillExperiences);
+                } catch (error) {
+                    console.error(`Error parsing skillExperiences for player ${player}:`, error);
+                    continue;
+                }
+
+                for (const [skill, xp] of Object.entries(skillExperiences)) {
+                    const skillFormatted = capitalizeFirstLetter(skill.toLowerCase());
+                    if (!skills.includes(skillFormatted)) {
+                        continue; // Skip unknown skills
+                    }
+
+                    const level = getLevelFromXP(xp);
+                    if (!highestSkillData[skillFormatted] || level > highestSkillData[skillFormatted].level) {
+                        highestSkillData[skillFormatted] = { player, level };
+                    }
+                }
+            }
+
+            return highestSkillData;
+        }
+
+        /**
+         * Capitalizes the first letter of a string.
+         * @param {string} str - The string to capitalize.
+         * @returns {string} - The capitalized string.
+         */
+        function capitalizeFirstLetter(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        /**
+         * Renders the skills grid based on the highestSkillData.
+         * @param {Object} highestSkillData - The data mapping skills to players and levels.
+         */
+        function renderSkills(highestSkillData) {
+            const skillsGrid = document.getElementById('skillsGrid');
+            skillsGrid.innerHTML = ''; // Clear existing content
+
+            skills.forEach(skill => {
+                const skillData = highestSkillData[skill];
+                const col = document.createElement('div');
+                col.className = 'col-12 col-sm-6 col-md-4 col-lg-3 col-xl-20';
+
+                const card = document.createElement('div');
+                card.className = 'card skill-card shadow-sm h-100';
+
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body d-flex flex-column align-items-center';
+
+                // Skill Icon
+                const icon = document.createElement('img');
+                // Get the image URL from the mapping; use placeholder if not found
+                icon.src = skillIconUrls[skill] || placeholderImage;
+                icon.alt = `${skill} Icon`;
+                icon.className = 'skill-icon mb-3';
+                icon.onerror = function() {
+                    this.src = placeholderImage; // Placeholder if icon not found
+                };
+
+                // Player Name
+                const playerName = document.createElement('h5');
+                playerName.className = 'card-title text-center';
+                playerName.textContent = skillData ? skillData.player : 'N/A';
+
+                // Level
+                const level = document.createElement('p');
+                level.className = 'card-text';
+                level.textContent = skillData ? `Level: ${skillData.level}` : 'N/A';
+
+                // Append elements
+                cardBody.appendChild(icon);
+                cardBody.appendChild(playerName);
+                cardBody.appendChild(level);
+                card.appendChild(cardBody);
+                col.appendChild(card);
+                skillsGrid.appendChild(col);
+            });
+        }
+
+        /**
+         * Displays an alert message.
+         * @param {string} message - The message to display.
+         * @param {string} type - The Bootstrap alert type (e.g., 'success', 'danger').
+         */
+        function showAlert(message, type) {
+            const skillsGrid = document.getElementById('skillsGrid');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} text-center`;
+            alertDiv.textContent = message;
+            skillsGrid.innerHTML = '';
+            skillsGrid.appendChild(alertDiv);
+        }
+
+        /**
+         * Initializes the page by fetching and rendering the skills.
+         */
+        async function initialize() {
+            showLoadingState();
+            const highestSkillData = await getHighestSkillData();
+            if (Object.keys(highestSkillData).length === 0) {
+                showAlert('No data available. Please try refreshing.', 'danger');
+            } else {
+                renderSkills(highestSkillData);
+            }
+        }
+
+        /**
+         * Shows a loading state while data is being fetched.
+         */
+        function showLoadingState() {
+            const skillsGrid = document.getElementById('skillsGrid');
+            skillsGrid.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center w-100" style="height: 200px;">
+                    <div class="spinner-border text-primary loading-spinner" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize on page load
+        window.onload = initialize;
+    </script>
+</body>
+</html>
